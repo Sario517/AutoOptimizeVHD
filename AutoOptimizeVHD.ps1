@@ -1,19 +1,3 @@
-# Copyright (c) 2025
-# Author: Sario Wang
-# Email: 86898648+Sario517@users.noreply.github.com
-# Created: 2025-11-03
-#
-# Licensed under the MIT License. See LICENSE file or:
-# https://opensource.org/licenses/MIT
-#
-# This software is provided "as is", without any warranty of any kind,
-# express or implied, including but not limited to the warranties of
-# merchantability, fitness for a particular purpose, and noninfringement.
-# In no event shall the authors or copyright holders be liable for any
-# claim, damages, or other liability, whether in an action of contract,
-# tort, or otherwise, arising from, out of, or in connection with the
-# software or the use or other dealings in the software.
-
 # ===========================================
 # AutoOptimizeVHD_prod.ps1
 # 生产就绪版：静默、可由计划任务以 SYSTEM 运行的 VHDX 压缩脚本
@@ -147,10 +131,21 @@ try {
             continue
         }
 
+        $wasAttached = (Get-VHD -Path $vhd).Attached
+
         try {
             Write-Log "Starting optimization: $vhd (mode=$OptimizeMode)" 'INFO'
+
+            if ($wasAttached) {
+                Dismount-VHD -Path $vhd
+            }
+
             Optimize-VHD -Path $vhd -Mode $OptimizeMode -ErrorAction Stop
             Write-Log "Optimization completed: $vhd" 'INFO'
+
+            if ($wasAttached) {
+                Mount-VHD -Path $vhd
+            }
         }
         catch {
             Write-Log "Optimization failed: $vhd — $($_.Exception.Message)" 'ERROR'
@@ -167,4 +162,3 @@ finally {
 }
 
 exit 0
-
